@@ -28,7 +28,6 @@ public class CharacterInput : NetworkBehaviour
 	private bool isAttack = false;
 
 	private bool curIsFaceRight = true;
-	private RaycastHit2D hit2d;
 	private Rigidbody2D body;
 	private Vector3 oriScale;
 	private NetworkIdentity identity;
@@ -48,7 +47,13 @@ public class CharacterInput : NetworkBehaviour
 		characterHp = this.gameObject.GetComponent<CharacterHp>();
 		characterHp.SetHpInfo(curHp, MaxHp);
 	}
-	private bool isCanReborn = true;
+    private void Start()
+    {
+		if(identity.isLocalPlayer)
+			CameraSmoothFollow.Instance.SetTarget(this.transform);
+    }
+
+    private bool isCanReborn = true;
 	private void OnDead() {
 		if (isCanReborn)
 		{
@@ -61,6 +66,7 @@ public class CharacterInput : NetworkBehaviour
 	private void Reborn()
 	{
 		curHp = MaxHp;
+		SetHpInfo();
 		RpcReborn();
 	}
 	[ClientRpc]
@@ -124,10 +130,10 @@ public class CharacterInput : NetworkBehaviour
 	}
 
 
-	private bool IsInAtkRange(CharacterInput pTarget)
+	private bool IsInAtkRange(Transform pTarget)
 	{
 		var direction = curIsFaceRight ? Vector2.right* atkDistance : -Vector2.right* atkDistance;
-		var targetPos = pTarget.transform.position;
+		var targetPos = pTarget.position;
 		var selfPos = this.transform.position;
 		if (Mathf.Abs(targetPos.y - selfPos.y) <= atkOffset && Mathf.Abs(targetPos.x - (selfPos.x + direction.x)) <= atkOffset)
 		{
@@ -145,9 +151,20 @@ public class CharacterInput : NetworkBehaviour
 		{ 
 			if(identitys[i] != this)
 			{
-				if (IsInAtkRange(identitys[i]))
+				if (IsInAtkRange(identitys[i].transform))
 				{
 					identitys[i].OnDamage((int)atk);
+				}
+			}
+		}
+		var ai = GameObject.FindObjectsOfType<MonsterAI>(false);
+		for (var i = 0; i < ai.Length; i++)
+		{
+			if (ai[i] != this)
+			{
+				if (IsInAtkRange(ai[i].transform))
+				{
+					ai[i].OnDamage((int)atk);
 				}
 			}
 		}
