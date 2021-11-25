@@ -89,10 +89,11 @@ public class CharacterInput : NetworkBehaviour
 			return;
 		isMove = false;
 		moveDelta = Vector3.zero;
-		isOnGround = Physics2D.Raycast(this.transform.position, Vector2.down, rayDistance, platformMask);
-		if (isOnGround && Input.GetKeyDown(jumpKey))
+		if (Input.GetKeyDown(jumpKey))
 		{
-			isJump = true;
+			isOnGround = Physics2D.Raycast(this.transform.position, Vector2.down, rayDistance, platformMask);
+			if(isOnGround)
+				isJump = true;
 		}
 		if (Input.GetKeyDown(attackKey))
 		{
